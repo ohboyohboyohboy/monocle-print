@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 module MonoclePrint
-  VERSION = '0.6.1'
+  VERSION = '1.0.0'
 
   def self.version
     VERSION
