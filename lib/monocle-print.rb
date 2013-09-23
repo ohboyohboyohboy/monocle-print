@@ -56,14 +56,15 @@ end
 
 $LOAD_PATH.unshift( MonoclePrint.library_path )
 
-for f in Dir[ MonoclePrint.library_path( 'monocle-print', 'core-ext', '*.rb' ) ]
-  require "monocle-print/core-ext/#{ File.basename( f, ".rb" ) }"
-end
-
 %w(
-  utils presentation terminal-escapes
-  atomic graphics output-device progress
-  table list
-).each do | lib |
-  require "monocle-print/#{ lib }"
-end
+  utils
+  geometry
+  presentation
+  terminal-escapes
+  atomic
+  graphics
+  output-device
+  progress
+  table
+  list
+).each { | lib | require "monocle-print/#{ lib }" }

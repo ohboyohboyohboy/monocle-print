@@ -139,7 +139,7 @@ module MonoclePrint
 
     def indent!( num_spaces )
       if num_spaces < 0
-        remaining_indent = ( level_of_indent + num_spaces ).at_least( 0 )
+        remaining_indent = Utils.at_least( level_of_indent + num_spaces, 0 )
         lstrip!
         indent!( remaining_indent )
       else
@@ -285,7 +285,7 @@ module MonoclePrint
     def align!( alignment, width, fill = ' ' )
       # if the width argument is less than the full block width of the text,
       # make it the full block width to ensure uniform width
-      width = width.at_least( self.width )
+      width = Utils.at_least( width, self.width )
 
       if empty?
         self << SingleLine.new( ' ' * width )
@@ -315,7 +315,7 @@ module MonoclePrint
     end
 
     def fixed_indent!( level = 0 )
-      level = level.at_least( 0 )
+      level = Utils.at_least( level, 0 )
       offset = level - level_of_indent
       indent!( offset )
     end
@@ -357,7 +357,7 @@ module MonoclePrint
     end
 
     def inspect
-      digits = Math.log10( length.at_least( 1 ) ).floor + 1
+      digits = Math.log10( Utils.at_least( length, 1 ) ).floor + 1
       $/ + each_with_index.map do | line, i |
         line_no = i.to_s.rjust( digits )
         "#{ line_no } | #{ line }"

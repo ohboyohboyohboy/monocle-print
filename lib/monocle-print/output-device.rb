@@ -8,19 +8,19 @@ module MonoclePrint
 class OutputDevice < DelegateClass( IO )
   include MonoclePrint
   include TerminalEscapes
-  
+
   def self.open( path, options = {} )
     File.open( path, options.fetch( :mode, 'w' ) ) do | file |
       return( yield( new( file, options ) ) )
     end
   end
-  
+
   def self.buffer( options = {} )
     case options
     when Numeric then options = { :width => options }
     when nil then options = {}
     end
-    
+
     buffer = StringIO.new( '', options.fetch( :mode, 'w' ) )
     out = new( buffer, options )
     if block_given?
@@ -34,23 +34,23 @@ class OutputDevice < DelegateClass( IO )
       return out
     end
   end
-  
+
   def self.stdout( options = {} )
     device = new( $stdout, options )
     block_given? ? yield( device ) : device
   end
-  
+
   DEFAULT_SIZE = Pair.new( 80, 22 ).freeze
   IO_PRINT_METHODS = %w( puts print printf putc )
   SIZE_IOCTL = 0x5413
   SIZE_STRUCT = [ 0, 0, 0, 0 ].pack( "SSSS" ).freeze
-  
+
   private :reopen
   attr_reader :device
   attr_accessor :style
-  
+
   def initialize( output, options = {} )
-    @device = 
+    @device =
       case output
       when String then File.open( output, options.fetch( :mode, 'w' ) )
       when IO then output
@@ -63,16 +63,16 @@ class OutputDevice < DelegateClass( IO )
         end
       end
     super( @device )
-    
+
     @cursor = Pair.new( 0, 0 )
     @background_stack = []
     @foreground_stack = []
     @background = @foreground = nil
     @tab_width = options.fetch( :tab_width, 8 )
-    
+
     @newline = options.fetch( :newline, $/ )
     @use_color = options.fetch( :use_color, tty? )
-    
+
     @margin = Pair.new( 0, 0 )
     case margin = options.fetch( :margin, 0 )
     when Numeric then @margin.left = @margin.right = margin.to_i
@@ -80,7 +80,7 @@ class OutputDevice < DelegateClass( IO )
       @margin.left = margin[ :left ].to_i
       @margin.right = margin[ :right ].to_i
     end
-    
+
     @tabs = {}
     @screen_size = nil
     @forced_width  = options[ :width ]
@@ -88,7 +88,7 @@ class OutputDevice < DelegateClass( IO )
     @alignment = options.fetch( :alignment, :left )
     @style = Style( options[ :style ] )
   end
-  
+
   def foreground( color = nil )
     color or return( @foreground_stack.last )
     begin
@@ -98,11 +98,11 @@ class OutputDevice < DelegateClass( IO )
       @foreground_stack.pop
     end
   end
-  
+
   def colors( fg, bg )
     foreground( fg ) { background( bg ) { yield } }
   end
-  
+
   def background( color = nil )
     color or return( @background_stack.last )
     begin
@@ -112,38 +112,38 @@ class OutputDevice < DelegateClass( IO )
       @background_stack.pop
     end
   end
-  
+
   alias on background
-  
+
   for color in ANSI_COLORS.keys
     class_eval( <<-END, __FILE__, __LINE__ )
       def #{ color }
         foreground( :#{ color } ) { yield }
       end
-      
+
       def on_#{ color }
         background( :#{ color } ) { yield }
       end
     END
   end
-  
+
   def use_color?
     @use_color
   end
-  
+
   def use_color( v = nil )
     v.nil? or self.use_color = v
     return( @use_color )
   end
-  
+
   def use_color= v
     @use_color = ! ! v # 'not not x' casts x to either `true' or 'false'
   end
-  
+
   def margin= n
-    left_margin = right_margin = n.to_i.at_least( 0 )
+    left_margin = right_margin = Utils.at_least( n.to_i, 0 )
   end
-  
+
   def indent( n = 0, m = 0 )
     n, m = n.to_i, m.to_i
     self.left_margin += n
@@ -159,7 +159,7 @@ class OutputDevice < DelegateClass( IO )
       self
     end
   end
-  
+
   def outdent( n )
     self.left_margin -= n.to_i
     block_given? and
@@ -167,23 +167,23 @@ class OutputDevice < DelegateClass( IO )
       ensure self.left_margin += n.to_i
       end
   end
-  
+
   def left_margin
     @margin.left
   end
-  
+
   def right_margin
     @margin.right
   end
-  
+
   def left_margin= n
     @margin.left = n.to_i
   end
-  
+
   def right_margin= n
     @margin.right = n.to_i
   end
-  
+
   def reset!
     @fg_stack.clear
     @bg_stack.clear
@@ -191,9 +191,9 @@ class OutputDevice < DelegateClass( IO )
     @cursor = Pair.new( 0, 0 )
     @screen_size = nil
   end
-  
+
   alias use_color? use_color
-  
+
   def list( *args )
     List.new( *args ) do | list |
       list.output = self
@@ -202,25 +202,25 @@ class OutputDevice < DelegateClass( IO )
     end
     return( self )
   end
-  
+
   def table( *args )
     Table.new( *args ) do | t |
       block_given? and yield( t )
       t.render( self )
     end
   end
-  
+
   def column_layout( *args )
     ColumnLayout.new( *args ) do | t |
       block_given? and yield( t )
       t.render( self )
     end
   end
-  
+
   def leger( char = '<h>', w = width )
     puts( @style.format( char ).tile( w ) )
   end
-  
+
   def print( *objs )
     text = Text( [ objs ].flatten!.join )
     @use_color or text.bleach!
@@ -234,7 +234,7 @@ class OutputDevice < DelegateClass( IO )
     @device.print( last_line )
     self
   end
-  
+
   def puts( *objs )
     text = Text( [ objs ].flatten!.join( @newline ) )
     ( text.empty? or text.last.empty? ) and text << Line( '' )
@@ -244,15 +244,15 @@ class OutputDevice < DelegateClass( IO )
     end
     self
   end
-  
+
   def printf( fmt, *args )
     print( sprintf( fmt, *args ) )
   end
-  
+
   def putsf( fmt, *args )
     puts( sprintf( fmt, *args ) )
   end
-  
+
   for m in %w( left right center )
     class_eval( <<-END, __FILE__, __LINE__ + 1 )
       def #{ m }
@@ -263,23 +263,23 @@ class OutputDevice < DelegateClass( IO )
       end
     END
   end
-  
+
   def close
     @device.close rescue nil
   end
-  
+
   def height
     screen_size.height
   end
-  
+
   def full_width
     screen_size.width
   end
-  
+
   def width
     screen_size.width - @margin.left - @margin.right
   end
-  
+
   def put( str, options = nil )
     if options
       fill  = @style.format( options.fetch( :fill, ' ' ) )
@@ -287,11 +287,11 @@ class OutputDevice < DelegateClass( IO )
     else
       fill, align = ' ', @alignment
     end
-    
+
     str = SingleLine.new( str ).align!( align, width, fill )
     code = color_code
     str.gsub!( /\e\[0m/ ) { "\e[0m" << code }
-    
+
     fill( @margin.left )
     @device.print( code )
     @device.print( str )
@@ -300,28 +300,28 @@ class OutputDevice < DelegateClass( IO )
     fill( @screen_size.width - @cursor.column )
     self
   end
-  
+
   def put!( str, options = nil )
     put( str, options )
     newline!
   end
-  
+
   def return!
     ~@cursor
     @device.print("\r")
     @device.flush
   end
-  
+
   def fill( width, char = ' ' )
     width =
       case width
       when Symbol, String
         distance_to( width )
       when Fixnum
-        width.at_least( 0 )
+        Utils.at_least( width, 0 )
       end
     if width > 0
-      fill_str = 
+      fill_str =
         if char.length > 1 and ( char = SingleLine( char ) ).width > 1
           char.tile( width )
         else
@@ -332,14 +332,14 @@ class OutputDevice < DelegateClass( IO )
     end
     self
   end
-  
+
   def newline!
     +@cursor
     @device.print( @newline )
     @device.flush
     self
   end
-  
+
   def space( n_lines = 1 )
     n_lines.times do
       put( '' )
@@ -347,29 +347,29 @@ class OutputDevice < DelegateClass( IO )
     end
     self
   end
-  
+
   def column
     @cursor.column
   end
-  
+
   def line
     @cursor.line
   end
-  
+
   def clear
     @cursor.line = @cursor.column = 0
     @device.print( set_cursor( 0, 0 ), clear_screen )
     @device.flush
     return( self )
   end
-  
+
   def clear_line
     @device.print( super )
     @device.flush
     return!
   end
-  
-  
+
+
   for m in %w( horizontal_line box_top box_bottom )
     class_eval( <<-END, __FILE__, __LINE__ + 1 )
       def #{ m }
@@ -392,19 +392,19 @@ class OutputDevice < DelegateClass( IO )
     end
     code
   end
-  
+
 private
-  
+
   def abs( col )
     col < 0 and col += width
-    col.bound( 0, width - 1 )
+    Utils.bound( col, 0, width - 1 )
   end
-  
+
 
   def distance_to( tab )
-    ( abs( @tabs[ tab ] ) - @cursor.column ).at_least( 0 )
+    Utils.at_least( abs( @tabs[ tab ] ) - @cursor.columm, 0 )
   end
-  
+
   def screen_size
     @screen_size ||= begin
       data = SIZE_STRUCT.dup
@@ -423,15 +423,15 @@ private
       default_size
     end
   end
-  
+
   def default_size
     Pair.new( @forced_width || default_width, @forced_height || default_height )
   end
-  
+
   def default_height
     ( ENV[ 'LINES' ] || DEFAULT_SIZE.height ).to_i
   end
-  
+
   def default_width
     ( ENV[ 'COLUMNS' ] || DEFAULT_SIZE.width ).to_i
   end
@@ -442,11 +442,11 @@ class Pager < OutputDevice
     pagers = %w( most less more )
     system_path = ENV[ "PATH" ].split( File::PATH_SEPARATOR )
     pager_command = pagers.find do | cmd |
-      system_path.find { | dir | test( ?x, dir / cmd ) }
+      system_path.find { | dir | test( ?x, File.join( dir, cmd ) ) }
     end
   end
   PAGER_COMMAND = pager_command
-  
+
   def self.open( options = {} )
     unless PAGER_COMMAND
       message = <<-END.gsub!( /\s+/, ' ' ).strip!
@@ -455,9 +455,9 @@ class Pager < OutputDevice
       END
       raise( IOError, message )
     end
-    
+
     options.fetch( :use_color ) { options[ :use_color ] = true }
-    
+
     if block_given?
       IO.popen( PAGER_COMMAND, 'w' ) do | pager |
         pager = new( pager, options )
