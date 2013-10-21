@@ -40,10 +40,10 @@ class OutputDevice < DelegateClass( IO )
     block_given? ? yield( device ) : device
   end
 
-  DEFAULT_SIZE = Pair.new( 80, 22 ).freeze
+  DEFAULT_SIZE     = Pair.new( 80, 22 ).freeze
   IO_PRINT_METHODS = %w( puts print printf putc )
-  SIZE_IOCTL = 0x5413
-  SIZE_STRUCT = [ 0, 0, 0, 0 ].pack( "SSSS" ).freeze
+  SIZE_IOCTL       = 0x5413
+  SIZE_STRUCT      = [ 0, 0, 0, 0 ].pack( "SSSS" ).freeze
 
   private :reopen
   attr_reader :device

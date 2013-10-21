@@ -83,7 +83,6 @@ module MonoclePrint
     end
 
     def align!( alignment, width, fill = ' ' )
-      strip!
       case alignment.to_sym
       when :left then left!( width, fill )
       when :center then center!( width, fill )
