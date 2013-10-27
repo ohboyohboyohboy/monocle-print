@@ -1,3 +1,8 @@
+Gemfile
+History.txt
+Manifest.txt
+Rakefile
+README.txt
 lib/monocle-print.rb
 lib/monocle-print/layout.rb
 lib/monocle-print/table/segments.rb
@@ -6,6 +11,7 @@ lib/monocle-print/table/column.rb
 lib/monocle-print/output-device.rb
 lib/monocle-print/graphics.rb
 lib/monocle-print/table.rb
+lib/monocle-print/graphics/registry.rb
 lib/monocle-print/list.rb
 lib/monocle-print/progress.rb
 lib/monocle-print/presentation.rb
@@ -13,7 +19,3 @@ lib/monocle-print/utils.rb
 lib/monocle-print/terminal-escapes.rb
 lib/monocle-print/geometry.rb
 lib/monocle-print/atomic.rb
-History.txt
-Manifest.txt
-README.txt
-Rakefile
