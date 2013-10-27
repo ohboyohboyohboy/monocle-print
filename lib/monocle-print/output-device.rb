@@ -40,6 +40,11 @@ class OutputDevice < DelegateClass( IO )
     block_given? ? yield( device ) : device
   end
 
+  def self.stderr( options = {} )
+    device = new( $stderr, options )
+    block_given? ? yield( device ) : device
+  end
+
   DEFAULT_SIZE     = Pair.new( 80, 22 ).freeze
   IO_PRINT_METHODS = %w( puts print printf putc )
   SIZE_IOCTL       = 0x5413
@@ -62,18 +67,20 @@ class OutputDevice < DelegateClass( IO )
           raise( ArgumentError, msg )
         end
       end
+
     super( @device )
 
-    @cursor = Pair.new( 0, 0 )
     @background_stack = []
     @foreground_stack = []
-    @background = @foreground = nil
-    @tab_width = options.fetch( :tab_width, 8 )
+    @background       = @foreground = nil
+    @use_color        = options.fetch( :use_color, tty? )
 
-    @newline = options.fetch( :newline, $/ )
-    @use_color = options.fetch( :use_color, tty? )
+    @cursor           = Pair.new( 0, 0 )
+    @tab_width        = options.fetch( :tab_width, 8 )
+    @margin           = Pair.new( 0, 0 )
 
-    @margin = Pair.new( 0, 0 )
+    @newline          = options.fetch( :newline, $/ )
+
     case margin = options.fetch( :margin, 0 )
     when Numeric then @margin.left = @margin.right = margin.to_i
     else
@@ -81,12 +88,12 @@ class OutputDevice < DelegateClass( IO )
       @margin.right = margin[ :right ].to_i
     end
 
-    @tabs = {}
-    @screen_size = nil
+    @tabs          = {}
+    @screen_size   = nil
     @forced_width  = options[ :width ]
     @forced_height = options[ :height ]
-    @alignment = options.fetch( :alignment, :left )
-    @style = Style( options[ :style ] )
+    @alignment     = options.fetch( :alignment, :left )
+    @style         = Style( options[ :style ] )
   end
 
   def foreground( color = nil )
@@ -137,22 +144,22 @@ class OutputDevice < DelegateClass( IO )
   end
 
   def use_color= v
-    @use_color = ! ! v # 'not not x' casts x to either `true' or 'false'
+    @use_color = !!v
   end
 
   def margin= n
-    left_margin = right_margin = Utils.at_least( n.to_i, 0 )
+    self.left_margin = self.right_margin = Utils.at_least( n.to_i, 0 )
   end
 
   def indent( n = 0, m = 0 )
     n, m = n.to_i, m.to_i
-    self.left_margin += n
+    self.left_margin  += n
     self.right_margin += m
     if block_given?
       begin
         yield
       ensure
-        self.left_margin -= n
+        self.left_margin  -= n
         self.right_margin -= m
       end
     else
@@ -297,7 +304,7 @@ class OutputDevice < DelegateClass( IO )
     @device.print( str )
     @cursor + str.width
     @device.print( clear_attr )
-    fill( @screen_size.width - @cursor.column )
+    fill( screen_size.width - @cursor.column )
     self
   end
 
@@ -406,34 +413,35 @@ private
   end
 
   def screen_size
-    @screen_size ||= begin
-      data = SIZE_STRUCT.dup
-      if @device.ioctl( SIZE_IOCTL, data ) >= 0
-        height, width = data.unpack( "SS" )
-        @forced_width and width = @forced_width
-        @forced_height and height = @forced_height
+    @screen_size ||=
+      begin
+        if device.respond_to?( :winsize )
+          detected_height, detected_width = device.winsize
+        elsif data = SIZE_STRUCT.dup and device.ioctl( SIZE_IOCTL, data ) >= 0
+          detected_height, detected_width = data.unpack( "SS" )
+        else
+          size = default_size
+          detected_height, detected_width = size.height, size.width
+        end
         Pair.new(
-          width  > 0 ? width  : default_width,
-          height > 0 ? height : default_height
+          @forced_height || detected_height,
+          @forced_width  || detected_width
         )
-      else
+      rescue Exception
         default_size
       end
-    rescue Exception
-      default_size
-    end
   end
 
   def default_size
-    Pair.new( @forced_width || default_width, @forced_height || default_height )
+    Pair.new( default_width, default_height )
   end
 
   def default_height
-    ( ENV[ 'LINES' ] || DEFAULT_SIZE.height ).to_i
+    ( @forced_height || ENV[ 'LINES' ] || DEFAULT_SIZE.height ).to_i
   end
 
   def default_width
-    ( ENV[ 'COLUMNS' ] || DEFAULT_SIZE.width ).to_i
+    ( @forced_width || ENV[ 'COLUMNS' ] || DEFAULT_SIZE.width ).to_i
   end
 end
 
@@ -471,20 +479,23 @@ class Pager < OutputDevice
 private
 
   def screen_size
-    @screen_size ||= begin
-      data = SIZE_STRUCT.dup
-      if STDOUT.ioctl( SIZE_IOCTL, data ) >= 0
-        height, width = data.unpack( "SS" )
+    @screen_size ||=
+      begin
+        if STDOUT.respond_to?( :winsize )
+          detected_height, detected_width = STDOUT.winsize
+        elsif data = SIZE_STRUCT.dup and STDOUT.ioctl( SIZE_IOCTL, data ) >= 0
+          detected_height, detected_width = data.unpack( "SS" )
+        else
+          size = default_size
+          detected_height, detected_width = size.height, size.width
+        end
         Pair.new(
-          width  > 0 ? width  : default_width,
-          height > 0 ? height : default_height
+          @forced_height || detected_height,
+          @forced_width  || detected_width
         )
-      else
+      rescue Exception
         default_size
       end
-    rescue Exception
-      default_size
-    end
   end
 end
 

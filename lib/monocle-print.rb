@@ -1,8 +1,14 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
+begin
+  require 'io/console'
+rescue LoadError
+  # ignore
+end
+
 module MonoclePrint
-  VERSION = '1.0.0'
+  VERSION = '1.0.2'
 
   def self.version
     VERSION
@@ -17,8 +23,16 @@ module MonoclePrint
     File.join( File.dirname( __FILE__ ), *args )
   end
 
-  def self.stdout
-    Output( $stdout )
+  def self.stdout( options = {}, &block )
+    OutputDevice.stdout( options, &block )
+  end
+
+  def self.stderr( options = {}, &block )
+    OutputDevice.stderr( options, &block )
+  end
+
+  def self.buffer( options = {}, &block )
+    OutputDevice.buffer( options, &block )
   end
 
 module_function
