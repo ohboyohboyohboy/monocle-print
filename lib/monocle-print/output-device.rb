@@ -424,8 +424,8 @@ private
           detected_height, detected_width = size.height, size.width
         end
         Pair.new(
-          @forced_height || detected_height,
-          @forced_width  || detected_width
+          @forced_width  || detected_width,
+          @forced_height || detected_height
         )
       rescue Exception
         default_size
