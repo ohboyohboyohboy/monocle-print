@@ -10,7 +10,7 @@ module Presentation
     super
     klass.extend( ClassMethods )
   end
-  
+
   attr_accessor :owner
   protected :owner=
 
@@ -41,7 +41,7 @@ module Presentation
 
   def style( value = nil )
     value and self.style = value
-    @style or @owner ? @owner.style : Graphics::NAMED_STYLES[ 'ascii' ]
+    @style or @owner ? @owner.style : Graphics.default
   end
 
   def style= value

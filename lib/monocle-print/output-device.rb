@@ -1,8 +1,6 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require 'delegate'
-autoload :StringIO, 'stringio' unless defined?( StringIO )
 
 module MonoclePrint
 class OutputDevice < DelegateClass( IO )

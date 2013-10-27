@@ -7,6 +7,9 @@ rescue LoadError
   # ignore
 end
 
+require 'delegate'
+autoload :StringIO, 'stringio' unless defined?( StringIO )
+
 module MonoclePrint
   VERSION = '1.0.3'
 
@@ -54,7 +57,7 @@ module_function
   end
 
   def Style( obj )
-    Graphics === obj ? obj : Graphics::NAMED_STYLES[ obj.to_s ]
+    Graphics === obj ? obj : Graphics.style( obj )
   end
 
   def Rectangle( obj )
