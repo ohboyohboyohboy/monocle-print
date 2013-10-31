@@ -11,7 +11,7 @@ require 'delegate'
 autoload :StringIO, 'stringio' unless defined?( StringIO )
 
 module MonoclePrint
-  VERSION = '1.0.5'
+  VERSION = '1.1.0'
 
   def self.version
     VERSION

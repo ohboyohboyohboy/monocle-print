@@ -70,7 +70,9 @@ class OutputDevice < DelegateClass( IO )
 
     @background_stack = []
     @foreground_stack = []
-    @background       = @foreground = nil
+    @modifier_stack   = []
+
+    @background       = @foreground = @modifier = nil
     @use_color        = options.fetch( :use_color, tty? )
 
     @cursor           = Pair.new( 0, 0 )
@@ -120,7 +122,17 @@ class OutputDevice < DelegateClass( IO )
 
   alias on background
 
-  for color in ANSI_COLORS.keys
+  def modifier( name = nil )
+    name or return( @modifier_stack.last )
+    begin
+      @modifier_stack.push( name )
+      yield
+    ensure
+      @modifier_stack.pop
+    end
+  end
+
+  for color in ANSI_COLOR_NAMES
     class_eval( <<-END, __FILE__, __LINE__ )
       def #{ color }
         foreground( :#{ color } ) { yield }
@@ -128,6 +140,14 @@ class OutputDevice < DelegateClass( IO )
 
       def on_#{ color }
         background( :#{ color } ) { yield }
+      end
+    END
+  end
+
+  for modifier in ANSI_MODIFIER_NAMES
+    class_eval( <<-END, __FILE__, __LINE__ )
+      def #{ modifier }
+        modifier( :#{ modifier } ) { yield }
       end
     END
   end
@@ -374,7 +394,6 @@ class OutputDevice < DelegateClass( IO )
     return!
   end
 
-
   for m in %w( horizontal_line box_top box_bottom )
     class_eval( <<-END, __FILE__, __LINE__ + 1 )
       def #{ m }
@@ -387,14 +406,21 @@ class OutputDevice < DelegateClass( IO )
   def color_code
     @use_color or return ''
     code = ''
+
     case fg = @foreground_stack.last
     when Fixnum then code << xterm_color( ?f, fg )
     when String, Symbol then code << ansi_color( ?f, fg )
     end
+
     case bg = @background_stack.last
     when Fixnum then code << xterm_color( ?b, bg )
     when String, Symbol then code << ansi_color( ?b, bg )
     end
+
+    case mod = @modifier_stack.last
+    when String, Symbol then code << ansi_modifier( mod )
+    end
+
     code
   end
 
