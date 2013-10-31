@@ -254,9 +254,12 @@ class OutputDevice < DelegateClass( IO )
       put!( line )
     end
     fill( @margin.left )
+
     @device.print( color_code )
     @cursor + last_line.width
     @device.print( last_line )
+    @device.print( clear_attr )
+    
     self
   end
 
