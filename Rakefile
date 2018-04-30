@@ -1,21 +1,21 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 #
-# author: Kyle Yetter
-#
 
-$LOAD_PATH.unshift( "lib" )
+PROJECT_NAME = "ohboyohboyohboy-monocle-print"
 
-require 'rubygems'
-require 'hoe'
-require 'monocle-print'
+require "rubygems"
+require "hoe"
 
-PACKAGE_NAME = File.basename( File.dirname( __FILE__ ) )
+# Hoe.plugin :compiler
+# Hoe.plugin :gem_prelude_sucks
+# Hoe.plugin :inline
+# Hoe.plugin :minitest
+# Hoe.plugin :racc
+# Hoe.plugin :rcov
+# Hoe.plugin :rubyforge
 
-Rake.application.options.ignore_deprecate = true
-
-Hoe.spec PACKAGE_NAME do
-  developer( PACKAGE_NAME, 'kyle@ohboyohboyohboy.org' )
-  self.version = MonoclePrint.version
+Hoe.spec PROJECT_NAME do
+  developer( "Kyle Yetter", "kyle@ohboyohboyohboy.org")
+  license "MIT" # this should match the license in the README
 end
-

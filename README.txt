@@ -1,4 +1,4 @@
-= monocle-print
+= ohboyohboyohboy-monocle-print
 
 * http://ohboyohboyohboy.org
 
@@ -12,13 +12,13 @@ Fancy console output tools
 
 == INSTALL:
 
-  sudo gem install monocle-print
+  sudo gem install ohboyohboyohboy-monocle-print
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2012 Kyle Yetter (kyle@ohboyohboyohboy.org)
+Copyright (c) 2012-2018 Kyle Yetter (kyle@ohboyohboyohboy.org)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
