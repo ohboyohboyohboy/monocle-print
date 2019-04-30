@@ -28,7 +28,7 @@ class Table
     @body = []
     
     case columns
-    when Fixnum
+    when Integer
       expand_columns( columns )
     when Array
       title_row( *columns )

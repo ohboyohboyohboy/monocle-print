@@ -254,7 +254,7 @@ module MonoclePrint
 
     def initialize( lines = nil, default = nil )
       case lines
-      when Fixnum
+      when Integer
         if block_given?
           super( lines ) { | i | Line( yield( i ) ) }
         else
