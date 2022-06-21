@@ -2,7 +2,7 @@
 # encoding: utf-8
 #
 
-PROJECT_NAME = "ohboyohboyohboy-monocle-print"
+PROJECT_NAME = "monocle-print"
 
 require "rubygems"
 require "hoe"
