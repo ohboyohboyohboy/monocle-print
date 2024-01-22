@@ -19,3 +19,4 @@ lib/monocle-print/utils.rb
 lib/monocle-print/terminal-escapes.rb
 lib/monocle-print/geometry.rb
 lib/monocle-print/atomic.rb
+lib/monocle-print/version.rb

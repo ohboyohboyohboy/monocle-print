@@ -10,9 +10,9 @@ end
 require 'delegate'
 autoload :StringIO, 'stringio' unless defined?( StringIO )
 
-module MonoclePrint
-  VERSION = '1.1.2'
+require_relative 'monocle-print/version'
 
+module MonoclePrint
   def self.version
     VERSION
   end
@@ -68,7 +68,6 @@ module_function
     else Rectangle.new( obj )
     end
   end
-
 end
 
 $LOAD_PATH.unshift( MonoclePrint.library_path )
@@ -84,4 +83,4 @@ $LOAD_PATH.unshift( MonoclePrint.library_path )
   progress
   table
   list
-).each { | lib | require "monocle-print/#{ lib }" }
+).each { | lib | require_relative "monocle-print/#{ lib }" }
